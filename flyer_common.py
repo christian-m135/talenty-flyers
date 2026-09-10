@@ -7,6 +7,7 @@ LIGHT_BLUE   = (232, 240, 255)   # #E8F0FF chip fill
 DARK_BLUE    = (10, 42, 67)      # #0A2A43
 INK          = (14, 26, 43)      # near-black wordmark tone
 GRID_BLUE    = (206, 222, 245)   # faint blueprint lines
+FAINT        = (200, 214, 236)   # interior rules inside a motif
 BODY_GRAY    = (74, 85, 104)
 PANEL        = (250, 252, 255)
 WHITE        = (255,255,255)
@@ -148,3 +149,67 @@ def chain_motif(img, cx, cy, w, h, label_room=True):
     d.ellipse([px(0.5)-4, ymrg-4, px(0.5)+4, ymrg+4], fill=TALENTY_BLUE)
     dimension_line(d, x0-24, py(0.19), x0-24, py(0.46)+bh)
     return (x0,y0,x1,y1)
+
+
+def _cylinder(d, x, y, w, h, rules=2):
+    """A database cylinder in blueprint line art."""
+    ell = h * 0.20
+    d.ellipse([x, y, x + w, y + ell * 2], outline=DARK_BLUE, width=3)
+    d.line([(x, y + ell), (x, y + h - ell)], fill=DARK_BLUE, width=3)
+    d.line([(x + w, y + ell), (x + w, y + h - ell)], fill=DARK_BLUE, width=3)
+    d.arc([x, y + h - ell * 2, x + w, y + h], 0, 180, fill=DARK_BLUE, width=3)
+    for i in range(rules):
+        ry = y + ell * 2 + (h - ell * 3) * (i + 0.5) / rules
+        d.arc([x, ry - ell, x + w, ry + ell], 0, 180, fill=TALENTY_BLUE, width=2)
+
+
+def stack_motif(img, cx, cy, w, h, label_room=True):
+    """Integration schematic: an AI model and an API wired through a service into SQL storage."""
+    d = ImageDraw.Draw(img)
+    x0, y0 = cx - w // 2, cy - h // 2
+    x1, y1 = cx + w // 2, cy + h // 2
+    for i in range(1, 4):
+        gx = x0 + (x1 - x0) * i / 4
+        d.line([(gx, y0), (gx, y1)], fill=FAINT, width=1)
+    for i in range(1, 5):
+        gy = y0 + (y1 - y0) * i / 5
+        d.line([(x0, gy), (x1, gy)], fill=FAINT, width=1)
+
+    def px(f): return x0 + (x1 - x0) * f
+    def py(f): return y0 + (y1 - y0) * f
+
+    # the model node up top - three tokens in a row
+    mw, mh = w * 0.52, h * 0.115
+    mx, my = px(0.50) - mw / 2, py(0.02)
+    d.rounded_rectangle([mx, my, mx + mw, my + mh], radius=int(mh * 0.42),
+                        outline=DARK_BLUE, width=3)
+    for i in range(3):
+        tx = mx + mw * (0.28 + i * 0.22)
+        d.ellipse([tx - 5, my + mh / 2 - 5, tx + 5, my + mh / 2 + 5], fill=TALENTY_BLUE)
+
+    # the external API on the left
+    aw, ah = w * 0.20, h * 0.09
+    _node(d, x0, py(0.45) - ah / 2, aw, ah, lines=1, r=4)
+
+    # the service in the middle
+    sw, sh = w * 0.46, h * 0.145
+    sx, sy = px(0.50) - sw / 2, py(0.38)
+    d.rectangle([sx, sy, sx + sw, sy + sh], outline=DARK_BLUE, width=3)
+    d.line([(sx, sy + sh * 0.34), (sx + sw, sy + sh * 0.34)], fill=DARK_BLUE, width=2)
+    for i in range(3):
+        vx = sx + sw * (0.22 + i * 0.28)
+        d.line([(vx, sy + sh * 0.52), (vx, sy + sh * 0.80)], fill=TALENTY_BLUE, width=2)
+
+    # storage below
+    cw, ch = w * 0.40, h * 0.28
+    _cylinder(d, px(0.50) - cw / 2, py(0.68), cw, ch, rules=2)
+
+    _arrow(d, px(0.50), my + mh, px(0.50), sy - 4)
+    _arrow(d, x0 + aw, py(0.45), sx - 4, py(0.45))
+    _arrow(d, px(0.50), sy + sh, px(0.50), py(0.68) - 4)
+    for pt in ((0.50, 0.31), (0.50, 0.60)):
+        d.ellipse([px(pt[0]) - 4, py(pt[1]) - 4, px(pt[0]) + 4, py(pt[1]) + 4],
+                  fill=TALENTY_BLUE)
+    d.line([(x0 - 26, my), (x0 - 26, py(0.68) + ch)], fill=TALENTY_BLUE, width=2)
+    dimension_line(d, x0 - 26, my, x0 - 26, py(0.68) + ch)
+    return (x0, y0, x1, y1)
