@@ -1,0 +1,96 @@
+from PIL import Image, ImageDraw, ImageFont
+import math, random, os
+
+# ---- Talenty brand ----
+TALENTY_BLUE = (0, 93, 255)      # #005DFF primary
+LIGHT_BLUE   = (232, 240, 255)   # #E8F0FF chip fill
+DARK_BLUE    = (10, 42, 67)      # #0A2A43
+INK          = (14, 26, 43)      # near-black wordmark tone
+GRID_BLUE    = (206, 222, 245)   # faint blueprint lines
+BODY_GRAY    = (74, 85, 104)
+PANEL        = (250, 252, 255)
+WHITE        = (255,255,255)
+FOOT_INK     = (26, 33, 45)      # charcoal footer band
+
+# Paths are resolved relative to this file so the scripts work from any cwd.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+F     = os.path.join(_HERE, "fonts")
+LOGO  = os.path.join(_HERE, "assets", "talenty-logo.jpg")
+def font(name, sz): return ImageFont.truetype(os.path.join(F, name), sz)
+def osw_b(s):  return font("Oswald-Bold.ttf", s)
+def osw_sb(s): return font("Oswald-SemiBold.ttf", s)
+def osw_m(s):  return font("Oswald-Medium.ttf", s)
+def inter(s):  return font("Inter-400.ttf", s)
+def inter_m(s):return font("Inter-500.ttf", s)
+def inter_sb(s):return font("Inter-600.ttf", s)
+def inter_b(s):return font("Inter-700.ttf", s)
+
+def bbox_h(draw, txt, fnt):
+    b = draw.textbbox((0,0), txt, font=fnt); return b[3]-b[1], b[1]
+def text_w(draw, txt, fnt):
+    b = draw.textbbox((0,0), txt, font=fnt); return b[2]-b[0]
+
+def blueprint_grid(img, step=54):
+    d = ImageDraw.Draw(img); W,H = img.size
+    for x in range(0, W, step): d.line([(x,0),(x,H)], fill=GRID_BLUE, width=1)
+    for y in range(0, H, step): d.line([(0,y),(W,y)], fill=GRID_BLUE, width=1)
+
+def light_panel(img, box, radius=0):
+    W,H = img.size
+    ov = Image.new("RGBA",(W,H),(0,0,0,0)); od=ImageDraw.Draw(ov)
+    od.rectangle(box, fill=(250,252,255,238))
+    img.alpha_composite(ov)
+
+def paste_logo(img, x, y, target_h):
+    lg = Image.open(LOGO).convert("RGB")
+    w,h = lg.size; nw = int(w*target_h/h)
+    lg = lg.resize((nw, target_h), Image.LANCZOS)
+    img.paste(lg, (x,y))
+    return nw, target_h
+
+def wrap(draw, txt, fnt, max_w):
+    words = txt.split(); lines=[]; cur=""
+    for w in words:
+        t=(cur+" "+w).strip()
+        if text_w(draw,t,fnt)<=max_w: cur=t
+        else:
+            if cur: lines.append(cur)
+            cur=w
+    if cur: lines.append(cur)
+    return lines
+
+def dimension_line(d, x1, y1, x2, y2, color=TALENTY_BLUE, w=2, tick=7):
+    d.line([(x1,y1),(x2,y2)], fill=color, width=w)
+    ang = math.atan2(y2-y1, x2-x1)
+    for (px,py) in [(x1,y1),(x2,y2)]:
+        dx=tick*math.cos(ang+math.pi/2); dy=tick*math.sin(ang+math.pi/2)
+        d.line([(px-dx,py-dy),(px+dx,py+dy)], fill=color, width=w)
+
+def ds_motif(img, cx, cy, w, h, label_room=True):
+    """Regression-scatter technical drawing for the data-science domain."""
+    d = ImageDraw.Draw(img)
+    x0,y0 = cx-w//2, cy-h//2
+    x1,y1 = cx+w//2, cy+h//2
+    d.line([(x0,y1),(x1,y1)], fill=DARK_BLUE, width=3)   # x axis
+    d.line([(x0,y0),(x0,y1)], fill=DARK_BLUE, width=3)   # y axis
+    for i in range(1,5):
+        gx = x0 + (x1-x0)*i/5; gy = y0 + (y1-y0)*i/5
+        d.line([(gx,y0),(gx,y1)], fill=(200,214,236), width=1)
+        d.line([(x0,gy),(x1,gy)], fill=(200,214,236), width=1)
+    random.seed(7); pts=[]; n=26
+    for i in range(n):
+        t=i/(n-1)
+        px = x0 + (x1-x0)*(0.06+0.9*t)
+        base = y1 - (y1-y0)*(0.10+0.8*t)
+        py = base + random.uniform(-1,1)*(y1-y0)*0.09
+        pts.append((px,py)); r=5
+        d.ellipse([px-r,py-r,px+r,py+r], fill=TALENTY_BLUE, outline=WHITE, width=1)
+    xs=[p[0] for p in pts]; ys=[p[1] for p in pts]
+    mx=sum(xs)/len(xs); my=sum(ys)/len(ys)
+    b=sum((xs[i]-mx)*(ys[i]-my) for i in range(len(xs)))/sum((x-mx)**2 for x in xs)
+    a=my-b*mx
+    lx0,lx1 = x0+(x1-x0)*0.04, x1-(x1-x0)*0.02
+    d.line([(lx0, a+b*lx0),(lx1, a+b*lx1)], fill=DARK_BLUE, width=3)
+    d.line([(x0-26,y0),(x0-26,y1)], fill=TALENTY_BLUE, width=2); dimension_line(d, x0-26, y0, x0-26, y1)
+    d.line([(x0,y1+26),(x1,y1+26)], fill=TALENTY_BLUE, width=2); dimension_line(d, x0, y1+26, x1, y1+26)
+    return (x0,y0,x1,y1)
