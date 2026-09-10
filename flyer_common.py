@@ -94,3 +94,57 @@ def ds_motif(img, cx, cy, w, h, label_room=True):
     d.line([(x0-26,y0),(x0-26,y1)], fill=TALENTY_BLUE, width=2); dimension_line(d, x0-26, y0, x0-26, y1)
     d.line([(x0,y1+26),(x1,y1+26)], fill=TALENTY_BLUE, width=2); dimension_line(d, x0, y1+26, x1, y1+26)
     return (x0,y0,x1,y1)
+
+def _arrow(d, x1, y1, x2, y2, color=DARK_BLUE, w=2, head=8):
+    d.line([(x1,y1),(x2,y2)], fill=color, width=w)
+    ang = math.atan2(y2-y1, x2-x1)
+    for s in (+1,-1):
+        a = ang + math.pi + s*0.42
+        d.line([(x2,y2),(x2+head*math.cos(a), y2+head*math.sin(a))], fill=color, width=w)
+
+def _node(d, x, y, w, h, lines=2, r=8):
+    """A blueprint box with faint blue rules inside, standing in for prompt text."""
+    d.rounded_rectangle([x,y,x+w,y+h], radius=r, outline=DARK_BLUE, width=3)
+    for i in range(lines):
+        ly = y + h*(i+1)/(lines+1)
+        lw = w*(0.62 if i%2==0 else 0.44)
+        d.line([(x+w*0.13, ly),(x+w*0.13+lw, ly)], fill=TALENTY_BLUE, width=2)
+
+def chain_motif(img, cx, cy, w, h, label_room=True):
+    """Prompt-chain DAG: input into a prompt node, branching model calls, merged output."""
+    d = ImageDraw.Draw(img)
+    x0,y0 = cx-w//2, cy-h//2
+    x1,y1 = cx+w//2, cy+h//2
+    for i in range(1,4):
+        gy = y0 + (y1-y0)*i/4
+        d.line([(x0,gy),(x1,gy)], fill=(200,214,236), width=1)
+    for i in range(1,3):
+        gx = x0 + (x1-x0)*i/3
+        d.line([(gx,y0),(gx,y1)], fill=(200,214,236), width=1)
+    def px(f): return x0 + (x1-x0)*f
+    def py(f): return y0 + (y1-y0)*f
+    iw, ih = w*0.30, h*0.075                                  # input
+    _node(d, px(0.5)-iw/2, py(0.02), iw, ih, lines=1)
+    pw, ph = w*0.62, h*0.15                                   # the prompt itself
+    _node(d, px(0.5)-pw/2, py(0.19), pw, ph, lines=3)
+    _arrow(d, px(0.5), py(0.02)+ih, px(0.5), py(0.19)-4)
+    bw, bh = w*0.40, h*0.14                                   # two model calls
+    for bx in (0.235, 0.765):
+        _node(d, px(bx)-bw/2, py(0.46), bw, bh, lines=2)
+    ymid = py(0.395)
+    d.line([(px(0.5), py(0.19)+ph),(px(0.5), ymid)], fill=DARK_BLUE, width=2)
+    d.line([(px(0.235), ymid),(px(0.765), ymid)], fill=DARK_BLUE, width=2)
+    for bx in (0.235, 0.765):
+        _arrow(d, px(bx), ymid, px(bx), py(0.46)-4)
+        d.ellipse([px(bx)-4, ymid-4, px(bx)+4, ymid+4], fill=TALENTY_BLUE)
+    d.ellipse([px(0.5)-4, ymid-4, px(0.5)+4, ymid+4], fill=TALENTY_BLUE)
+    ymrg = py(0.72)                                           # merge back to one output
+    for bx in (0.235, 0.765):
+        d.line([(px(bx), py(0.46)+bh),(px(bx), ymrg)], fill=DARK_BLUE, width=2)
+    d.line([(px(0.235), ymrg),(px(0.765), ymrg)], fill=DARK_BLUE, width=2)
+    ow, oh = w*0.46, h*0.12
+    _arrow(d, px(0.5), ymrg, px(0.5), py(0.80)-4)
+    _node(d, px(0.5)-ow/2, py(0.80), ow, oh, lines=2)
+    d.ellipse([px(0.5)-4, ymrg-4, px(0.5)+4, ymrg+4], fill=TALENTY_BLUE)
+    dimension_line(d, x0-24, py(0.19), x0-24, py(0.46)+bh)
+    return (x0,y0,x1,y1)
