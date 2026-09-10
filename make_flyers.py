@@ -3,31 +3,34 @@ from flyer_common import *
 import os
 
 # Output dir, resolved relative to this file so the script works from any cwd.
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out", "ai-developer")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out", "ai-creative-designer")
 
-TITLE = "AI Developer"
+TITLE = "AI Designer"
 KICKER = "WE'RE HIRING"
-SUBHEAD = "AI + Automation  ·  100% Remote  ·  Full-Time"
-DESC = "Ship AI and automation into production software for a Canadian heavy-vehicle services company - LLM features, n8n workflows and SQL integrations the business runs on daily."
-DESC_SHORT = "LLM features, n8n workflows and SQL integrations, shipped to production."
+SUBHEAD = "Social-First  ·  100% Remote  ·  Freelance"
+DESC = "Concept and ship social-first creative for an established Canadian consumer brand, with AI image and video generation as the primary engine behind the work - not a finishing touch."
+DESC_SHORT = "Social-first creative for a Canadian consumer brand, with AI generation as the primary engine."
 BULLETS = [
-    "Ship AI features into real production",
-    "Python and FastAPI, n8n automations",
-    "OpenAI / Azure AI APIs, SQL Server",
-    "4h+ daily overlap with EST hours",
+    "AI generation as the creative engine",
+    "Instagram, TikTok, LinkedIn, YouTube",
+    "Direct line to the Creative Director",
+    "Freelance in USD, long-term fit",
 ]
 BULLETS_SHORT = [
-    "AI features shipped to production",
-    "Python, FastAPI, n8n, SQL Server",
-    "4h+ daily overlap with EST",
+    "AI generation as the creative engine",
+    "IG, TikTok, LinkedIn and YouTube",
+    "Freelance in USD, 100% remote",
 ]
-CHIPS = ["Python", "AI APIs", "n8n", "SQL Server", "EST +4h"]
-CHIPS_WIDE = ["Python", "AI APIs", "EST +4h"]
-CAPTION = "Wire AI into the real work."
+# Chip counts are set by measured row width, not taste: five chips overflow every
+# format here, and a wrapped second row is what pushes the caption under the
+# footer band on the square. Four fit the 9:16, three fit everything else.
+CHIPS = ["Midjourney", "Runway", "C1 English", "LATAM"]
+CHIPS_SHORT = ["Midjourney", "C1 English", "LATAM"]
+CAPTION = "Prompt it. Cut it. Ship it."
 URL = "www.talenty.dev"
 
-# "AI Developer" is a short title, so the panel can sit at 0.63 and the headline
-# runs at the full 104px without reaching the motif.
+# "AI Designer" is short enough for the full 104px headline against a 0.63 panel,
+# the same envelope "AI Developer" used - it clears the motif's left edge.
 PANEL = 0.63
 T_SQ = 104
 
@@ -80,10 +83,10 @@ def render_1x1():
         for ln in wrap(d,b,bf,int(W*0.48)):
             d.text((M+32,y), ln, font=bf, fill=INK); bh,bo=bbox_h(d,ln,bf); y+=bh+9
         y+=8
-    y+=16; y=draw_chips(d,img,M,y,CHIPS,inter_sb(26),int(W*0.545))+34
+    y+=16; y=draw_chips(d,img,M,y,CHIPS_SHORT,inter_sb(26),int(W*0.545))+34
     cf=osw_sb(38); d.text((M,y), CAPTION, font=cf, fill=INK)
-    stack_motif(img, int(W*0.845), int(H*0.44), int(W*0.25), int(H*0.32))
-    footer(img, 92); img.convert("RGB").save(os.path.join(OUT, "AIDeveloper_Talenty_1x1_1080x1080.png"), "PNG")
+    genstack_motif(img, int(W*0.845), int(H*0.44), int(W*0.25), int(H*0.32))
+    footer(img, 92); img.convert("RGB").save(os.path.join(OUT, "AICreativeDesigner_Talenty_1x1_1080x1080.png"), "PNG")
 
 def render_9x16():
     W,H=1080,1920; img=base(W,H); d=ImageDraw.Draw(img); M=int(W*0.075)
@@ -92,11 +95,9 @@ def render_9x16():
     tf=osw_b(130); d.text((M,y), TITLE, font=tf, fill=INK); th,off=bbox_h(d,TITLE,tf); y+=th+off+24
     sf=osw_m(44); d.text((M,y), SUBHEAD, font=sf, fill=TALENTY_BLUE); sh,so=bbox_h(d,SUBHEAD,sf); y+=sh+44
     dimension_line(d, M, y, W-M, y); y+=54
-    # The schematic is a vertical stack, so it needs a narrow tall box here rather
-    # than the wide one a horizontal motif would take. CHIPS wraps to two rows on
-    # this format, so everything below stays tight or the caption slides under the
-    # footer band.
-    stack_motif(img, W//2, int(H*0.47), int(W*0.34), int(H*0.23)); y=int(H*0.615)
+    # The generation stack is a vertical flow, so it takes a narrow tall box here
+    # rather than the wide one a horizontal motif would want.
+    genstack_motif(img, W//2, int(H*0.47), int(W*0.34), int(H*0.23)); y=int(H*0.615)
     df=inter(36)
     for ln in wrap(d, DESC, df, W-2*M):
         d.text((M,y), ln, font=df, fill=BODY_GRAY); lh2,o2=bbox_h(d,ln,df); y+=lh2+14
@@ -107,7 +108,7 @@ def render_9x16():
         d.text((M+34,y), b, font=bf, fill=INK); bh,bo=bbox_h(d,b,bf); y+=bh+18
     y+=14; y=draw_chips(d,img,M,y,CHIPS,inter_sb(31),W-2*M)+42
     cf=osw_sb(50); d.text((M,y), CAPTION, font=cf, fill=INK)
-    footer(img, 118); img.convert("RGB").save(os.path.join(OUT, "AIDeveloper_Talenty_9x16_1080x1920.png"), "PNG")
+    footer(img, 118); img.convert("RGB").save(os.path.join(OUT, "AICreativeDesigner_Talenty_9x16_1080x1920.png"), "PNG")
 
 def render_191x1():
     W,H=1200,628; img=base(W,H); d=ImageDraw.Draw(img); M=int(W*0.05)
@@ -120,9 +121,9 @@ def render_191x1():
     for b in BULLETS_SHORT:
         d.rectangle([M, y+7, M+14, y+21], fill=TALENTY_BLUE)
         d.text((M+28,y), b, font=bf, fill=INK); bh,bo=bbox_h(d,b,bf); y+=bh+12
-    y+=8; draw_chips(d,img,M,y,CHIPS_WIDE,inter_sb(23),int(W*0.56))
-    stack_motif(img, int(W*0.815), int(H*0.50), int(W*0.24), int(H*0.56))
-    footer(img, 70); img.convert("RGB").save(os.path.join(OUT, "AIDeveloper_Talenty_1.91x1_1200x628.png"), "PNG")
+    y+=8; draw_chips(d,img,M,y,CHIPS_SHORT,inter_sb(23),int(W*0.56))
+    genstack_motif(img, int(W*0.815), int(H*0.50), int(W*0.24), int(H*0.56))
+    footer(img, 70); img.convert("RGB").save(os.path.join(OUT, "AICreativeDesigner_Talenty_1.91x1_1200x628.png"), "PNG")
 
 def render_4x5():
     W,H=1080,1350; img=base(W,H); d=ImageDraw.Draw(img); M=int(W*0.065)
@@ -143,10 +144,10 @@ def render_4x5():
         for ln in wrap(d,b,bf,int(W*0.52)):
             d.text((M+32,y), ln, font=bf, fill=INK); bh,bo=bbox_h(d,ln,bf); y+=bh+10
         y+=8
-    y+=14; y=draw_chips(d,img,M,y,CHIPS,inter_sb(27),int(W*0.545))+34
+    y+=14; y=draw_chips(d,img,M,y,CHIPS_SHORT,inter_sb(27),int(W*0.545))+34
     cf=osw_sb(40); d.text((M,y), CAPTION, font=cf, fill=INK)
-    stack_motif(img, int(W*0.845), int(H*0.42), int(W*0.25), int(H*0.28))
-    footer(img, 96); img.convert("RGB").save(os.path.join(OUT, "AIDeveloper_Talenty_4x5_1080x1350.png"), "PNG")
+    genstack_motif(img, int(W*0.845), int(H*0.42), int(W*0.25), int(H*0.28))
+    footer(img, 96); img.convert("RGB").save(os.path.join(OUT, "AICreativeDesigner_Talenty_4x5_1080x1350.png"), "PNG")
 
 os.makedirs(OUT, exist_ok=True)
 render_1x1(); render_9x16(); render_191x1(); render_4x5()

@@ -213,3 +213,70 @@ def stack_motif(img, cx, cy, w, h, label_room=True):
     d.line([(x0 - 26, my), (x0 - 26, py(0.68) + ch)], fill=TALENTY_BLUE, width=2)
     dimension_line(d, x0 - 26, my, x0 - 26, py(0.68) + ch)
     return (x0, y0, x1, y1)
+
+
+def _corner_marks(d, x0, y0, x1, y1, color=TALENTY_BLUE, w=3, ln=12):
+    """Crop marks on a selected frame."""
+    for (px, py, sx, sy) in ((x0, y0, 1, 1), (x1, y0, -1, 1), (x0, y1, 1, -1), (x1, y1, -1, -1)):
+        d.line([(px, py), (px + ln * sx, py)], fill=color, width=w)
+        d.line([(px, py), (px, py + ln * sy)], fill=color, width=w)
+
+
+def genstack_motif(img, cx, cy, w, h, label_room=True):
+    """Generation pipeline - a prompt into a generator, a 2x2 candidate grid, one selected out."""
+    d = ImageDraw.Draw(img)
+    x0, y0 = cx - w // 2, cy - h // 2
+    x1, y1 = cx + w // 2, cy + h // 2
+
+    def px(f): return x0 + (x1 - x0) * f
+    def py(f): return y0 + (y1 - y0) * f
+
+    for i in range(1, 4):
+        d.line([(px(i / 4), y0), (px(i / 4), y1)], fill=FAINT, width=1)
+    for i in range(1, 5):
+        d.line([(x0, py(i / 5)), (x1, py(i / 5))], fill=FAINT, width=1)
+
+    pw, ph = w * 0.58, h * 0.115
+    _node(d, px(0.5) - pw / 2, py(0.0), pw, ph, lines=2, r=8)
+
+    gy = py(0.235)
+    gr = h * 0.062
+    d.polygon([(px(0.5), gy - gr), (px(0.5) + gr, gy), (px(0.5), gy + gr), (px(0.5) - gr, gy)],
+              outline=DARK_BLUE, width=3)
+    d.ellipse([px(0.5) - 5, gy - 5, px(0.5) + 5, gy + 5], fill=TALENTY_BLUE)
+    _arrow(d, px(0.5), py(0.0) + ph, px(0.5), gy - gr - 4)
+
+    cw, ch = w * 0.30, h * 0.155
+    gap = w * 0.06
+    gx0 = px(0.5) - cw - gap / 2
+    gty = py(0.40)
+    cells = []
+    for r in range(2):
+        for c in range(2):
+            ax = gx0 + c * (cw + gap)
+            ay = gty + r * (ch + h * 0.045)
+            d.rectangle([ax, ay, ax + cw, ay + ch], outline=DARK_BLUE, width=3)
+            d.line([(ax + cw * 0.12, ay + ch * 0.66), (ax + cw * 0.88, ay + ch * 0.66)],
+                   fill=FAINT, width=2)
+            cells.append((ax, ay, ax + cw, ay + ch))
+    _arrow(d, px(0.5), gy + gr, px(0.5), gty - 6)
+
+    sel = cells[2]
+    _corner_marks(d, *sel)
+
+    ow, oh = w * 0.40, h * 0.13
+    ox0 = px(0.5) - ow / 2
+    oy0 = py(0.855)
+    d.rectangle([ox0, oy0, ox0 + ow, oy0 + oh], outline=DARK_BLUE, width=3)
+    d.line([(ox0 + ow * 0.10, oy0 + oh * 0.62), (ox0 + ow * 0.62, oy0 + oh * 0.62)],
+           fill=TALENTY_BLUE, width=3)
+    mx = (sel[0] + sel[2]) / 2
+    d.line([(mx, sel[3]), (mx, py(0.80))], fill=DARK_BLUE, width=2)
+    d.line([(mx, py(0.80)), (px(0.5), py(0.80))], fill=DARK_BLUE, width=2)
+    _arrow(d, px(0.5), py(0.80), px(0.5), oy0 - 4)
+    d.ellipse([mx - 4, py(0.80) - 4, mx + 4, py(0.80) + 4], fill=TALENTY_BLUE)
+
+    dx = gx0 - 26                      # hug the grid, not the empty bounding box
+    d.line([(dx, gty), (dx, oy0 + oh)], fill=TALENTY_BLUE, width=2)
+    dimension_line(d, dx, gty, dx, oy0 + oh)
+    return (x0, y0, x1, y1)
