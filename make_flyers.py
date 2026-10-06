@@ -1,3 +1,7 @@
+import os, sys
+# The renderer is shared by both flyer repos and lives in the meta-campaign skill.
+sys.path.insert(0, os.environ.get("FLYER_RENDERER") or os.path.join(
+    os.path.expanduser("~"), ".claude", "skills", "meta-campaign", "renderer"))
 from PIL import Image, ImageDraw
 from flyer_common import *
 import os
